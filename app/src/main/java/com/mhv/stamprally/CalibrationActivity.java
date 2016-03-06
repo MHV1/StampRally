@@ -12,6 +12,7 @@ import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -190,12 +191,7 @@ public class CalibrationActivity extends Activity {
 	public void calibrate() {
         fingerprintData = new HashMap<>();
         //TODO: Multiple scans could be preformed to decrease inaccuracies caused by RSSI fluctuation.
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                wifiManager.startScan();
-            }
-        }, SCAN_INTERVAL);
+        wifiManager.startScan();
 	}
 
     private class WifiScanReceiver extends BroadcastReceiver {
@@ -211,6 +207,7 @@ public class CalibrationActivity extends Activity {
             selectedFingerprint.setCalibrated(true);
             calibratedFingerprints.add(selectedFingerprint);
             calibratedText.setText("Calibrated fingerprints: " + calibratedFingerprints.size());
+            Log.d(TAG,"Fingerprint: " + selectedFingerprint.getFingerprintData());
         }
     }
 }

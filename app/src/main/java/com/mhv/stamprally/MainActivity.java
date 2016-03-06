@@ -63,15 +63,6 @@ public class MainActivity extends AppCompatActivity {
         }
         wifiScanReceiver = new WifiScanReceiver();
 
-        if (!fingerprints.isEmpty()) {
-            scan();
-            status.setText("Scanning...");
-
-        } else {
-            status.setText("No stamps have been calibrated!");
-            fingerprints = new ArrayList<>();
-        }
-
         settingsButton = (ImageButton) findViewById(R.id.settingsButton);
         settingsButton.setOnClickListener(new View.OnClickListener() {
 
@@ -125,6 +116,15 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         registerReceiver(wifiScanReceiver, new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
         super.onResume();
+
+        if (!fingerprints.isEmpty()) {
+            scan();
+            status.setText("Scanning for: " + fingerprints.size() + " fingerprints...");
+
+        } else {
+            status.setText("No stamps have been calibrated!");
+            fingerprints = new ArrayList<>();
+        }
     }
 
     @Override
