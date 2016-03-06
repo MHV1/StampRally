@@ -43,6 +43,7 @@ public class CalibrationActivity extends Activity {
 	private WifiManager wifiManager;
     private WifiScanReceiver wifiScanReceiver;
     private List<ScanResult> wifiScanResults;
+    private static final int SCAN_INTERVAL = 1000;
 	
 	public ArrayList<Fingerprint> availableFingerprints = new ArrayList<>();
     public ArrayList<Fingerprint> calibratedFingerprints = new ArrayList<>();
@@ -91,8 +92,7 @@ public class CalibrationActivity extends Activity {
                 Fingerprint fingerprint = (Fingerprint) fingerprintList.getItemAtPosition(position);
                 selectedFingerprint = fingerprint;
                 Toast.makeText(CalibrationActivity.this, "Selected fingerprint: " + fingerprint.getFingerprintId(), Toast.LENGTH_SHORT).show();
-                //TODO: Do not use until done.
-                //calibrate();
+                calibrate();
             }
         });
 
@@ -188,16 +188,29 @@ public class CalibrationActivity extends Activity {
     }
 
 	public void calibrate() {
-		//TODO: Multiple scans could be preformed to decrease inaccuracies caused by RSSI fluctuation.
-        fingerprintData = new HashMap<>();    //A new HashMap must be generated each scan
-		wifiManager.startScan();
-        //TODO: Use scan results to create the Fingerprint.
+        fingerprintData = new HashMap<>();
+        //TODO: Multiple scans could be preformed to decrease inaccuracies caused by RSSI fluctuation.
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                wifiManager.startScan();
+            }
+        }, SCAN_INTERVAL);
 	}
 
     private class WifiScanReceiver extends BroadcastReceiver {
 
         public void onReceive(Context c, Intent intent) {
             wifiScanResults = wifiManager.getScanResults();
+
+            for (ScanResult sr : wifiScanResults) {
+                fingerprintData.put(sr.BSSID, sr.level);
+            }
+
+            selectedFingerprint.setFingerprintData(fingerprintData);
+            selectedFingerprint.setCalibrated(true);
+            calibratedFingerprints.add(selectedFingerprint);
+            calibratedText.setText("Calibrated fingerprints: " + calibratedFingerprints.size());
         }
     }
 }
