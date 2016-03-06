@@ -12,6 +12,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.TextView;
@@ -139,6 +140,7 @@ public class MainActivity extends AppCompatActivity {
             public void run() {
                 if (!scanPaused) {
                     wifiManager.startScan();
+                    scan();
                 }
             }
         }, SCAN_INTERVAL);
@@ -148,6 +150,17 @@ public class MainActivity extends AppCompatActivity {
 
         public void onReceive(Context c, Intent intent) {
             wifiScanResults = wifiManager.getScanResults();
+
+            /*A temporary Fingerprint will be generated each scan (1 sec) and compared with
+            the calibrated ones in order to get the closest match*/
+            HashMap<String, Integer> tempData = new HashMap<>();
+            for (ScanResult sr : wifiScanResults) {
+                tempData.put(sr.BSSID, sr.level);
+            }
+            Fingerprint runtimeFingerprint = new Fingerprint(0, tempData, true);
+            Log.d(TAG, "Runtime Fingerprint: " + runtimeFingerprint.getFingerprintData());
+
+            //TODO: Logic to compare and find closest Fingerprint
         }
     }
 
