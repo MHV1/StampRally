@@ -159,9 +159,12 @@ public class MainActivity extends AppCompatActivity {
             }
             Fingerprint runtimeFingerprint = new Fingerprint(0, tempData, true);
             Log.d(TAG, "Runtime Fingerprint: " + runtimeFingerprint.getFingerprintData());
-
-            //TODO: Logic to compare and find closest Fingerprint
+            findFingerprintInRange(runtimeFingerprint);
         }
+    }
+
+    private void findFingerprintInRange(Fingerprint runtimeFingerprint) {
+        //TODO: Logic to compare and find closest Fingerprint
     }
 
     @Override
