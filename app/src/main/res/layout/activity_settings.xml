@@ -3,15 +3,6 @@
     android:layout_width="match_parent" android:layout_height="match_parent"
     android:background="@drawable/background">
 
-    <ListView
-        android:layout_width="wrap_content"
-        android:layout_height="500dp"
-        android:id="@+id/fingerprintList"
-        android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true"
-        android:background="#bf8040"
-        android:padding="10dp" />
-
     <ImageButton
         android:layout_width="80dp"
         android:layout_height="80dp"
@@ -39,9 +30,20 @@
         android:layout_height="wrap_content"
         android:text="Calibrated fingerprints :"
         android:id="@+id/calibratedText"
-        android:layout_below="@+id/fingerprintList"
-        android:layout_centerHorizontal="true"
-        android:textSize="25sp"/>
+        android:textSize="25sp"
+        android:layout_above="@+id/okButton"
+        android:layout_centerHorizontal="true" />
 
+    <GridView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/calibrationGrid"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_above="@+id/calibratedText"
+        android:horizontalSpacing="20dp"
+        android:numColumns="2"
+        android:paddingStart="36dp"
+        android:verticalSpacing="30dp"/>
 
 </RelativeLayout>

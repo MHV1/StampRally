@@ -16,12 +16,17 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
+import android.widget.BaseAdapter;
 import android.widget.EditText;
+import android.widget.GridLayout;
+import android.widget.GridView;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -51,8 +56,10 @@ public class CalibrationActivity extends Activity {
 	private HashMap<String, Integer> fingerprintData = new HashMap<>(); //Made from AP address and RSSI
 	public Fingerprint selectedFingerprint;
 
+    private GridView calibrationGrid;
+    private GridAdapter gridAdapter;
+
 	private Intent intent;
-    private ListView fingerprintList;
     private TextView calibratedText;
 
     @Override
@@ -70,29 +77,26 @@ public class CalibrationActivity extends Activity {
         //TODO: User should be able to calibrate/recalibrate fingerprints anytime
 		if (availableFingerprints.isEmpty()) {
 			availableFingerprints = new ArrayList<>();
-			Fingerprint fingerprint = new Fingerprint(1, fingerprintData, false);
+			Fingerprint fingerprint = new Fingerprint(R.drawable.picture_icon, 1, fingerprintData, false);
 			availableFingerprints.add(fingerprint);
-			fingerprint = new Fingerprint(2, fingerprintData, false);
+			fingerprint = new Fingerprint(R.drawable.picture_icon, 2, fingerprintData, false);
 			availableFingerprints.add(fingerprint);
-			fingerprint = new Fingerprint(3, fingerprintData, false);
+			fingerprint = new Fingerprint(R.drawable.picture_icon, 3, fingerprintData, false);
 			availableFingerprints.add(fingerprint);
-			fingerprint = new Fingerprint(4, fingerprintData, false);
+			fingerprint = new Fingerprint(R.drawable.picture_icon, 4, fingerprintData, false);
 			availableFingerprints.add(fingerprint);
 		}
 
-        fingerprintList = (ListView) findViewById(R.id.fingerprintList);
-        Fingerprint[] fingerprintArray = new Fingerprint[availableFingerprints.size()];
-        availableFingerprints.toArray(fingerprintArray);
+        calibrationGrid = (GridView) findViewById(R.id.calibrationGrid);
+        gridAdapter = new GridAdapter(this);
+        calibrationGrid.setAdapter(gridAdapter);
+        calibrationGrid.setChoiceMode(GridView.CHOICE_MODE_SINGLE);
 
-        ArrayAdapter listAdapter = new ArrayAdapter<>(getApplicationContext(), android.R.layout.simple_list_item_1, fingerprintArray);
-        fingerprintList.setAdapter(listAdapter);
-        fingerprintList.setOnItemClickListener(new OnItemClickListener() {
-
+        calibrationGrid.setOnItemClickListener(new OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Fingerprint fingerprint = (Fingerprint) fingerprintList.getItemAtPosition(position);
-                selectedFingerprint = fingerprint;
-                Toast.makeText(CalibrationActivity.this, "Selected fingerprint: " + fingerprint.getFingerprintId(), Toast.LENGTH_SHORT).show();
+                selectedFingerprint = (Fingerprint) gridAdapter.getItem(position);
+                Toast.makeText(CalibrationActivity.this, "Selected fingerprint: " + selectedFingerprint.getFingerprintId(), Toast.LENGTH_SHORT).show();
                 calibrate();
             }
         });
@@ -208,6 +212,43 @@ public class CalibrationActivity extends Activity {
             calibratedFingerprints.add(selectedFingerprint);
             calibratedText.setText("Calibrated fingerprints: " + calibratedFingerprints.size());
             Log.d(TAG,"Fingerprint: " + selectedFingerprint.getFingerprintData());
+        }
+    }
+
+    public class GridAdapter extends BaseAdapter {
+        private Context context;
+
+        public GridAdapter(Context context) {
+            this.context = context;
+        }
+
+        public int getCount() {
+            return availableFingerprints.size();
+        }
+
+        public Object getItem(int position) {
+            return availableFingerprints.get(position);
+        }
+
+        public long getItemId(int position) {
+            return position;
+        }
+
+        public View getView(int position, View view, ViewGroup parent) {
+
+            ImageView imageView;
+
+            if (view == null) {
+                imageView = new ImageView(context);
+                imageView.setLayoutParams(new GridView.LayoutParams(350,350));
+                imageView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+                imageView.setPadding(5, 5, 5, 5);
+            } else {
+                imageView = (ImageView) view;
+            }
+
+            imageView.setImageResource(availableFingerprints.get(position).getStampId());
+            return imageView;
         }
     }
 }

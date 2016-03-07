@@ -6,19 +6,34 @@ import android.os.Parcelable;
 import java.util.HashMap;
 import java.util.Map;
 
+/*
+*
+* Each Fingerprint represents a Stamp!
+*
+*/
 public class Fingerprint implements Parcelable {
-	
+
+    private int stampId;
 	private int fingerprintId;
 	private HashMap<String, Integer> fingerprintData = new HashMap<>(); //Made from AP address and RSSI
 	private boolean calibrated;
 	
-	public Fingerprint(int fingerprintId, HashMap<String, Integer> fingerprintData, boolean calibrated) {
+	public Fingerprint(int stampId, int fingerprintId, HashMap<String, Integer> fingerprintData, boolean calibrated) {
+        this.stampId = stampId;
 		this.fingerprintId = fingerprintId;
 		this.fingerprintData = fingerprintData;
 		this.calibrated = calibrated;
 	}
-	
-	public int getFingerprintId() {
+
+    public void setStampId(int stampId) {
+        this.stampId = stampId;
+    }
+
+    public int getStampId() {
+        return stampId;
+    }
+
+    public int getFingerprintId() {
 	    return fingerprintId;
 	}
 	
@@ -38,49 +53,51 @@ public class Fingerprint implements Parcelable {
 		return calibrated;
 	}
 
-	@Override
-	public int describeContents() {
-		return hashCode();
-	}
+    @Override
+    public int describeContents() {
+        return hashCode();
+    }
 
-	@Override
-	public void writeToParcel(Parcel dest, int flags) {
-		dest.writeInt(this.fingerprintId);
-		
-		//Android cannot write HashMaps to Parcels directly, so we have to work around that.
-		dest.writeInt(fingerprintData.size());
-		for (Map.Entry<String, Integer> entry : fingerprintData.entrySet()) {
-			dest.writeString(entry.getKey());
-			dest.writeInt(entry.getValue());
-		}
-		
-		dest.writeByte((byte) (calibrated ? 1 : 0));     //if myBoolean == true, byte == 1
-	}
-	
-	public Fingerprint(Parcel source) {
-		this.fingerprintId = source.readInt();
-		
-		//Android cannot read HashMaps to Parcels directly either, so we have to work around that.
-		int size = source.readInt();
-		for (int i = 0; i < size; i++) {
-			String key = source.readString();
-			int value = source.readInt();
-			this.fingerprintData.put(key, value);
-		}
-		
-		this.calibrated = source.readByte() != 0;     //myBoolean == true if byte != 0
-	}
-	
-	public static final Creator<Fingerprint> CREATOR = new Creator<Fingerprint>() {
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeInt(this.stampId);
+        dest.writeInt(this.fingerprintId);
 
-		@Override
-		public Fingerprint createFromParcel(Parcel source) {
-			return new Fingerprint(source);
-		}
+        //Android cannot write HashMaps to Parcels directly, so we have to work around that.
+        dest.writeInt(fingerprintData.size());
+        for (Map.Entry<String, Integer> entry : fingerprintData.entrySet()) {
+            dest.writeString(entry.getKey());
+            dest.writeInt(entry.getValue());
+        }
 
-		@Override
-		public Fingerprint[] newArray(int size) {
-			return new Fingerprint[size];
-		}
-	};
+        dest.writeByte((byte) (calibrated ? 1 : 0));     //if myBoolean == true, byte == 1
+    }
+
+    public Fingerprint(Parcel source) {
+        this.stampId = source.readInt();
+        this.fingerprintId = source.readInt();
+
+        //Android cannot read HashMaps to Parcels directly either, so we have to work around that.
+        int size = source.readInt();
+        for (int i = 0; i < size; i++) {
+            String key = source.readString();
+            int value = source.readInt();
+            this.fingerprintData.put(key, value);
+        }
+
+        this.calibrated = source.readByte() != 0;     //myBoolean == true if byte != 0
+    }
+
+    public static final Parcelable.Creator<Fingerprint> CREATOR = new Creator<Fingerprint>() {
+
+        @Override
+        public Fingerprint createFromParcel(Parcel source) {
+            return new Fingerprint(source);
+        }
+
+        @Override
+        public Fingerprint[] newArray(int size) {
+            return new Fingerprint[size];
+        }
+    };
 }

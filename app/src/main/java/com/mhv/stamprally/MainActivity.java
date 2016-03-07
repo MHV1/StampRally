@@ -20,6 +20,7 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.TreeSet;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -41,6 +42,7 @@ public class MainActivity extends AppCompatActivity {
 
     private Fingerprint stampInRange;
     private ArrayList<Fingerprint> foundStamps = new ArrayList<>();
+    Fingerprint runtimeFingerprint;
 
     //Activity views.
     private TextView status;
@@ -157,9 +159,8 @@ public class MainActivity extends AppCompatActivity {
             for (ScanResult sr : wifiScanResults) {
                 tempData.put(sr.BSSID, sr.level);
             }
-            Fingerprint runtimeFingerprint = new Fingerprint(0, tempData, true);
+            runtimeFingerprint = new Fingerprint(R.drawable.picture_icon, 0, tempData, true);
             Log.d(TAG, "Runtime Fingerprint: " + runtimeFingerprint.getFingerprintData());
-            findFingerprintInRange(runtimeFingerprint);
         }
     }
 
