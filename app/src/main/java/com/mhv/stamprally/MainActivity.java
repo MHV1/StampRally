@@ -19,8 +19,8 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
-import java.util.TreeSet;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -38,11 +38,11 @@ public class MainActivity extends AppCompatActivity {
     public static final int SCAN_INTERVAL = 1000;
 
     private ArrayList<Fingerprint> fingerprints = new ArrayList<>();
+    //Fingerprint data is mapped using BSSID as key and level (or RSSI) as mapped value
     private HashMap<String, Integer> fingerprintData = new HashMap<>();
 
     private Fingerprint stampInRange;
     private ArrayList<Fingerprint> foundStamps = new ArrayList<>();
-    Fingerprint runtimeFingerprint;
 
     //Activity views.
     private TextView status;
@@ -159,13 +159,58 @@ public class MainActivity extends AppCompatActivity {
             for (ScanResult sr : wifiScanResults) {
                 tempData.put(sr.BSSID, sr.level);
             }
-            runtimeFingerprint = new Fingerprint(R.drawable.picture_icon, 0, tempData, true);
-            Log.d(TAG, "Runtime Fingerprint: " + runtimeFingerprint.getFingerprintData());
+            Fingerprint runtimeFingerprint = new Fingerprint(R.drawable.picture_icon, 0, tempData, true);
+            //Log.d(TAG, "Runtime Fingerprint: " + runtimeFingerprint.getFingerprintData());
+            //TODO: Logic to compare and find closest Fingerprint
+            for (Fingerprint calibratedFingerprint : fingerprints) {
+                calculateEuclideanDistance(calibratedFingerprint, runtimeFingerprint);
+            }
+            //TODO: Got the distances. Time to use them to get the fingerprint in range
         }
     }
 
-    private void findFingerprintInRange(Fingerprint runtimeFingerprint) {
-        //TODO: Logic to compare and find closest Fingerprint
+    //Euclidean distances are calculated in order to find the closest fingerprint to the runtime one (shortest distance)
+    private double calculateEuclideanDistance(Fingerprint calibratedFingerprint, Fingerprint runtimeFingerprint) {
+
+        //See Euclidean distance formula for Fingerprinting method
+        int difference;
+        int totalSum = 0;
+        double euclideanDistance;
+
+        HashMap<String, Integer> calibratedFingerprintData = calibratedFingerprint.getFingerprintData();
+        HashMap<String, Integer> runtimeFingerprintData = runtimeFingerprint.getFingerprintData();
+
+        HashSet<String> BSSIDs = new HashSet<>();
+        BSSIDs.addAll(calibratedFingerprintData.keySet());
+        BSSIDs.addAll(runtimeFingerprintData.keySet());
+
+        for (String BSSID : BSSIDs) {
+            Integer calibratedRSSI = calibratedFingerprintData.get(BSSID);
+            Integer runtimeRSSI = runtimeFingerprintData.get(BSSID);
+
+            //Avoid null values at all costs!
+            if (calibratedRSSI == null) {
+                calibratedRSSI = -95;
+            }
+
+            if (runtimeRSSI == null) {
+                runtimeRSSI = -95;
+            }
+
+            difference = calibratedRSSI - runtimeRSSI;
+            totalSum += difference;
+
+            /*Log.d(TAG, "Fingerprint: " + calibratedFingerprint.getFingerprintId()
+                    + " " + calibratedRSSI
+                    + " " + BSSID
+                    + " " + runtimeRSSI
+                    + " " + BSSID
+                    + " " + difference);*/
+        }
+
+        euclideanDistance = Math.sqrt(totalSum * totalSum);
+        //Log.d(TAG, "" + totalSum + " " + euclideanDistance);
+        return euclideanDistance;
     }
 
     @Override

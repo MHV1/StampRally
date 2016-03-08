@@ -20,14 +20,11 @@ import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
-import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import android.widget.EditText;
-import android.widget.GridLayout;
 import android.widget.GridView;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -53,7 +50,7 @@ public class CalibrationActivity extends Activity {
 	
 	public ArrayList<Fingerprint> availableFingerprints = new ArrayList<>();
     public ArrayList<Fingerprint> calibratedFingerprints = new ArrayList<>();
-	private HashMap<String, Integer> fingerprintData = new HashMap<>(); //Made from AP address and RSSI
+	private HashMap<String, Integer> fingerprintData = new HashMap<>();
 	public Fingerprint selectedFingerprint;
 
     private GridView calibrationGrid;
@@ -194,7 +191,7 @@ public class CalibrationActivity extends Activity {
 
 	public void calibrate() {
         fingerprintData = new HashMap<>();
-        //TODO: Multiple scans could be preformed to decrease inaccuracies caused by RSSI fluctuation.
+        //TODO: Multiple scans could be preformed to decrease inaccuracies caused by RSSI fluctuation?
         wifiManager.startScan();
 	}
 
