@@ -41,15 +41,14 @@ public class CalibrationActivity extends Activity {
 
 	private WifiManager wifiManager;
     private WifiScanReceiver wifiScanReceiver;
-    private List<ScanResult> wifiScanResults;
     private static final int SCAN_INTERVAL = 1000;
+    List<ScanResult> wifiScanResults = new ArrayList<>();
 	
 	public ArrayList<Stamp> availableStamps = new ArrayList<>();
     public ArrayList<Stamp> calibratedStamps = new ArrayList<>();
 	private HashMap<String, Integer> stampData = new HashMap<>();
 	public Stamp selectedStamp;
 
-    private GridView calibrationGrid;
     private GridAdapter gridAdapter;
 
 	private Intent intent;
@@ -81,7 +80,7 @@ public class CalibrationActivity extends Activity {
 			availableStamps.add(stamp);
 		}
 
-        calibrationGrid = (GridView) findViewById(R.id.calibrationGrid);
+        GridView calibrationGrid = (GridView) findViewById(R.id.calibrationGrid);
         gridAdapter = new GridAdapter(this);
         calibrationGrid.setAdapter(gridAdapter);
         calibrationGrid.setChoiceMode(GridView.CHOICE_MODE_SINGLE);
@@ -90,20 +89,12 @@ public class CalibrationActivity extends Activity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 selectedStamp = (Stamp) gridAdapter.getItem(position);
-                Toast.makeText(CalibrationActivity.this, "Selected stamp: " + selectedStamp.getStampId(), Toast.LENGTH_SHORT).show();
-                final ProgressDialog calibrationDialog = ProgressDialog.show(CalibrationActivity.this, "Please wait", "Calibrating Stamp...", true);
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            calibrate();
-                            Thread.sleep(4000);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                        calibrationDialog.dismiss();
-                    }
-                }).start();
+                //Toast.makeText(CalibrationActivity.this, "Selected stamp: " + selectedStamp.getStampId(), Toast.LENGTH_SHORT).show();
+                if(!calibratedStamps.contains(selectedStamp)) {
+                    calibrate();
+                } else {
+                    Toast.makeText(CalibrationActivity.this, "The stamp selected has already been calibrated!", Toast.LENGTH_LONG).show();
+                }
             }
         });
 
@@ -199,15 +190,29 @@ public class CalibrationActivity extends Activity {
     }
 
 	public void calibrate() {
-        stampData = new HashMap<>();
-        //TODO: Multiple scans could be preformed to decrease inaccuracies caused by RSSI fluctuation?
         wifiManager.startScan();
+
+        //TODO: Work in process: Multiple scans could be preformed to decrease inaccuracies caused by RSSI fluctuation?
+        final ProgressDialog calibrationDialog = ProgressDialog.show(CalibrationActivity.this, "Please wait", "Calibrating Stamp...", true);
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    stampData = new HashMap<>();
+                    wifiManager.startScan();
+                    Thread.sleep(4000);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                calibrationDialog.dismiss();
+            }
+        }).start();
 	}
 
     private class WifiScanReceiver extends BroadcastReceiver {
 
         public void onReceive(Context c, Intent intent) {
-            wifiScanResults = wifiManager.getScanResults();
+             wifiScanResults = wifiManager.getScanResults();
 
             for (ScanResult sr : wifiScanResults) {
                 stampData.put(sr.BSSID, sr.level);
@@ -217,7 +222,7 @@ public class CalibrationActivity extends Activity {
             selectedStamp.setCalibrated(true);
             calibratedStamps.add(selectedStamp);
             calibratedText.setText("Calibrated stamps: " + calibratedStamps.size());
-            Log.d(TAG,"Stamp: " + selectedStamp.getStampData());
+            Log.d(TAG, "Stamp: " + selectedStamp.getStampData());
         }
     }
 

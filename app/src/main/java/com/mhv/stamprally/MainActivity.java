@@ -53,7 +53,8 @@ public class MainActivity extends AppCompatActivity {
     private TextView inRangeText;
     private ImageButton settingsButton;
     private ImageButton stampButton;
-    GridView mainGrid;
+    private GridView mainGrid;
+    private GridAdapter gridAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,7 +65,8 @@ public class MainActivity extends AppCompatActivity {
         inRangeText = (TextView) findViewById(R.id.inRangeText);
 
         mainGrid = (GridView) findViewById(R.id.mainGrid);
-        mainGrid.setAdapter(new GridAdapter(this));
+        gridAdapter = new GridAdapter(this);
+        mainGrid.setAdapter(gridAdapter);
 
         wifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
         if (wifiManager == null) {
@@ -96,6 +98,7 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 if (stampInRange != null && !foundStamps.contains(stampInRange)) {
                     foundStamps.add(stampInRange);
+                    gridAdapter.notifyDataSetChanged();
                 } else {
                     Toast.makeText(MainActivity.this, "The stamp in range has already been found!", Toast.LENGTH_LONG).show();
                 }
@@ -180,24 +183,25 @@ public class MainActivity extends AppCompatActivity {
 
             /*A temporary Stamp will be generated each scan (1 sec) and compared with
             the calibrated ones in order to get the closest match*/
-            HashMap<String, Integer> tempData = new HashMap<>();
+            HashMap<String, Integer> runtimeStampData = new HashMap<>();
             for (ScanResult sr : wifiScanResults) {
-                tempData.put(sr.BSSID, sr.level);
+                runtimeStampData.put(sr.BSSID, sr.level);
             }
-            Stamp runtimeStamp = new Stamp(R.drawable.picture_icon, 0, tempData, true);
+            Stamp runtimeStamp = new Stamp(R.drawable.picture_icon, 0, runtimeStampData, true);
             //Log.d(TAG, "Runtime Stamp: " + runtimeStamp.getStampData());
-            HashMap<Stamp, Double> stampDistances = new HashMap<>();
-            for (Stamp calibratedStamp : stamps) {
-                double distanceResult = calculateEuclideanDistance(calibratedStamp, runtimeStamp);
-                stampDistances.put(calibratedStamp, distanceResult);
-                findStampInRange(stampDistances);
-            }
+            findStampInRange(runtimeStamp);
         }
     }
 
-    public void findStampInRange(HashMap<Stamp, Double> stampDistances) {
-        Map.Entry<Stamp, Double> minEntry = null;
+    public void findStampInRange(Stamp runtimeStamp) {
 
+        HashMap<Stamp, Double> stampDistances = new HashMap<>();
+        for (Stamp calibratedStamp : stamps) {
+            double distanceResult = calculateEuclideanDistance(calibratedStamp, runtimeStamp);
+            stampDistances.put(calibratedStamp, distanceResult);
+        }
+
+        Map.Entry<Stamp, Double> minEntry = null;
         for(Map.Entry<Stamp, Double> entry : stampDistances.entrySet()) {
             if (minEntry == null || entry.getValue() < minEntry.getValue()) {
                 minEntry = entry;
