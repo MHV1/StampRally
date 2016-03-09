@@ -14,8 +14,13 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.BaseAdapter;
+import android.widget.GridView;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -47,6 +52,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView inRangeText;
     private ImageButton settingsButton;
     private ImageButton stampButton;
+    GridView mainGrid;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,6 +61,9 @@ public class MainActivity extends AppCompatActivity {
 
         status = (TextView) findViewById(R.id.statusText);
         inRangeText = (TextView) findViewById(R.id.inRangeText);
+
+        mainGrid = (GridView) findViewById(R.id.mainGrid);
+        mainGrid.setAdapter(new GridAdapter(this));
 
         wifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
         if (wifiManager == null) {
@@ -79,11 +88,16 @@ public class MainActivity extends AppCompatActivity {
         });
 
         stampButton = (ImageButton) findViewById(R.id.stampButton);
+        stampButton.setEnabled(false);
         stampButton.setOnClickListener(new View.OnClickListener() {
 
             @Override
             public void onClick(View v) {
-                //TODO: Supposed to be used to collect the stamps. Act accordingly.
+                if (stampInRange != null && !foundStamps.contains(stampInRange)) {
+                    foundStamps.add(stampInRange);
+                } else {
+                    Toast.makeText(MainActivity.this, "The stamp in range has already been found!", Toast.LENGTH_LONG).show();
+                }
             }
         });
     }
@@ -235,16 +249,46 @@ public class MainActivity extends AppCompatActivity {
                     Bundle bundle = data.getExtras();
                     stamps = bundle.getParcelableArrayList("calibrated_stamps");
                     scanPaused = false;
+                    stampButton.setEnabled(true);
                     scan();
                 }
                 break;
+        }
+    }
 
-            case STAMP_FOUND:
-                if(resultCode == RESULT_OK) {
-                    //TODO: Camera is supposed to be used to collect the stamps. Act accordingly.
-                    //N/A
-                }
-                break;
+    //GridView adapter used to display the found stamps.
+    public class GridAdapter extends BaseAdapter {
+        private Context context;
+
+        public GridAdapter(Context c) {
+            context = c;
+        }
+
+        public int getCount() {
+            return foundStamps.size();
+        }
+
+        public Object getItem(int position) {
+            return foundStamps.get(position);
+        }
+
+        public long getItemId(int position) {
+            return 0;
+        }
+
+        public View getView(int position, View view, ViewGroup parent) {
+            ImageView iview;
+            if (view == null) {
+                iview = new ImageView(context);
+                iview.setLayoutParams(new GridView.LayoutParams(250,250));
+                iview.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+                iview.setPadding(5, 5, 5, 5);
+            } else {
+                iview = (ImageView) view;
+            }
+
+            iview.setImageResource(foundStamps.get(position).getImageId());
+            return iview;
         }
     }
 }

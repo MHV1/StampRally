@@ -69,13 +69,13 @@ public class CalibrationActivity extends Activity {
         //TODO: User should be able to calibrate/recalibrate stamps anytime
 		if (availableStamps.isEmpty()) {
 			availableStamps = new ArrayList<>();
-			Stamp stamp = new Stamp(R.drawable.picture_icon, 1, stampData, false);
+			Stamp stamp = new Stamp(R.drawable.wifi_empty, 1, stampData, false);
 			availableStamps.add(stamp);
-			stamp = new Stamp(R.drawable.picture_icon, 2, stampData, false);
+			stamp = new Stamp(R.drawable.wifi_low, 2, stampData, false);
 			availableStamps.add(stamp);
-			stamp = new Stamp(R.drawable.picture_icon, 3, stampData, false);
+			stamp = new Stamp(R.drawable.wifi_mid, 3, stampData, false);
 			availableStamps.add(stamp);
-			stamp = new Stamp(R.drawable.picture_icon, 4, stampData, false);
+			stamp = new Stamp(R.drawable.wifi_full, 4, stampData, false);
 			availableStamps.add(stamp);
 		}
 
