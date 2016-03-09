@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -29,7 +30,7 @@ public class MainActivity extends AppCompatActivity {
     private static final Handler handler = new Handler(Looper.getMainLooper());
 
     private static final int STAMP_EDIT = 1;
-    private static final int STAMP_FOUND = 3;
+    private static final int STAMP_FOUND = 2;
 
     protected WifiManager wifiManager;
     private WifiScanReceiver wifiScanReceiver;
@@ -37,12 +38,9 @@ public class MainActivity extends AppCompatActivity {
     private boolean scanPaused = false;
     public static final int SCAN_INTERVAL = 1000;
 
-    private ArrayList<Fingerprint> fingerprints = new ArrayList<>();
-    //Fingerprint data is mapped using BSSID as key and level (or RSSI) as mapped value
-    private HashMap<String, Integer> fingerprintData = new HashMap<>();
-
-    private Fingerprint stampInRange;
-    private ArrayList<Fingerprint> foundStamps = new ArrayList<>();
+    private ArrayList<Stamp> stamps = new ArrayList<>();
+    private Stamp stampInRange;
+    private ArrayList<Stamp> foundStamps = new ArrayList<>();
 
     //Activity views.
     private TextView status;
@@ -73,9 +71,9 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 scanPaused = true;
                 Intent intent = new Intent(MainActivity.this, CalibrationActivity.class);
-                Bundle fingerprintsToCalibrate = new Bundle();
-                fingerprintsToCalibrate.putParcelableArrayList("to_calibrate", fingerprints);
-                intent.putExtras(fingerprintsToCalibrate);
+                Bundle stampsToCalibrate = new Bundle();
+                stampsToCalibrate.putParcelableArrayList("to_calibrate", stamps);
+                intent.putExtras(stampsToCalibrate);
                 startActivityForResult(intent, STAMP_EDIT);
             }
         });
@@ -120,13 +118,13 @@ public class MainActivity extends AppCompatActivity {
         registerReceiver(wifiScanReceiver, new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
         super.onResume();
 
-        if (!fingerprints.isEmpty()) {
+        if (!stamps.isEmpty()) {
             scan();
-            status.setText("Scanning for: " + fingerprints.size() + " fingerprints...");
+            status.setText("Scanning for: " + stamps.size() + " stamps...");
 
         } else {
             status.setText("No stamps have been calibrated!");
-            fingerprints = new ArrayList<>();
+            stamps = new ArrayList<>();
         }
     }
 
@@ -153,40 +151,57 @@ public class MainActivity extends AppCompatActivity {
         public void onReceive(Context c, Intent intent) {
             wifiScanResults = wifiManager.getScanResults();
 
-            /*A temporary Fingerprint will be generated each scan (1 sec) and compared with
+            /*A temporary Stamp will be generated each scan (1 sec) and compared with
             the calibrated ones in order to get the closest match*/
             HashMap<String, Integer> tempData = new HashMap<>();
             for (ScanResult sr : wifiScanResults) {
                 tempData.put(sr.BSSID, sr.level);
             }
-            Fingerprint runtimeFingerprint = new Fingerprint(R.drawable.picture_icon, 0, tempData, true);
-            //Log.d(TAG, "Runtime Fingerprint: " + runtimeFingerprint.getFingerprintData());
-            //TODO: Logic to compare and find closest Fingerprint
-            for (Fingerprint calibratedFingerprint : fingerprints) {
-                calculateEuclideanDistance(calibratedFingerprint, runtimeFingerprint);
+            Stamp runtimeStamp = new Stamp(R.drawable.picture_icon, 0, tempData, true);
+            //Log.d(TAG, "Runtime Stamp: " + runtimeStamp.getStampData());
+            //TODO: Logic to compare and find closest Stamp
+            HashMap<Stamp, Double> stampDistances = new HashMap<>();
+            for (Stamp calibratedStamp : stamps) {
+                double distanceResult = calculateEuclideanDistance(calibratedStamp, runtimeStamp);
+                stampDistances.put(calibratedStamp, distanceResult);
             }
-            //TODO: Got the distances. Time to use them to get the fingerprint in range
+
+            Map.Entry<Stamp, Double> minEntry = null;
+
+            for(Map.Entry<Stamp, Double> entry : stampDistances.entrySet()) {
+                if (minEntry == null || entry.getValue() < minEntry.getValue()) {
+                    minEntry = entry;
+                }
+            }
+
+            if(minEntry != null) {
+                Log.d(TAG, "" + minEntry.getValue());
+                stampInRange = minEntry.getKey();
+                inRangeText.setText("" + minEntry.getKey().getStampId());
+            }
         }
     }
 
-    //Euclidean distances are calculated in order to find the closest fingerprint to the runtime one (shortest distance)
-    private double calculateEuclideanDistance(Fingerprint calibratedFingerprint, Fingerprint runtimeFingerprint) {
+
+
+    //Euclidean distances are calculated in order to find the closest stamp to the runtime one (shortest distance)
+    private double calculateEuclideanDistance(Stamp calibratedStamp, Stamp runtimeStamp) {
 
         //See Euclidean distance formula for Fingerprinting method
         int difference;
         int totalSum = 0;
         double euclideanDistance;
 
-        HashMap<String, Integer> calibratedFingerprintData = calibratedFingerprint.getFingerprintData();
-        HashMap<String, Integer> runtimeFingerprintData = runtimeFingerprint.getFingerprintData();
+        HashMap<String, Integer> calibratedStampData = calibratedStamp.getStampData();
+        HashMap<String, Integer> runtimeStampData = runtimeStamp.getStampData();
 
         HashSet<String> BSSIDs = new HashSet<>();
-        BSSIDs.addAll(calibratedFingerprintData.keySet());
-        BSSIDs.addAll(runtimeFingerprintData.keySet());
+        BSSIDs.addAll(calibratedStampData.keySet());
+        BSSIDs.addAll(runtimeStampData.keySet());
 
         for (String BSSID : BSSIDs) {
-            Integer calibratedRSSI = calibratedFingerprintData.get(BSSID);
-            Integer runtimeRSSI = runtimeFingerprintData.get(BSSID);
+            Integer calibratedRSSI = calibratedStampData.get(BSSID);
+            Integer runtimeRSSI = runtimeStampData.get(BSSID);
 
             //Avoid null values at all costs!
             if (calibratedRSSI == null) {
@@ -200,16 +215,16 @@ public class MainActivity extends AppCompatActivity {
             difference = calibratedRSSI - runtimeRSSI;
             totalSum += difference;
 
-            /*Log.d(TAG, "Fingerprint: " + calibratedFingerprint.getFingerprintId()
+            Log.d(TAG, "Stamp: " + calibratedStamp.getStampId()
                     + " " + calibratedRSSI
                     + " " + BSSID
                     + " " + runtimeRSSI
                     + " " + BSSID
-                    + " " + difference);*/
+                    + " " + difference);
         }
 
         euclideanDistance = Math.sqrt(totalSum * totalSum);
-        //Log.d(TAG, "" + totalSum + " " + euclideanDistance);
+        Log.d(TAG, "" + totalSum + " " + euclideanDistance);
         return euclideanDistance;
     }
 
@@ -220,7 +235,7 @@ public class MainActivity extends AppCompatActivity {
             case STAMP_EDIT:
                 if(resultCode == RESULT_OK) {
                     Bundle bundle = data.getExtras();
-                    fingerprints = bundle.getParcelableArrayList("calibrated_fingerprints");
+                    stamps = bundle.getParcelableArrayList("calibrated_stamps");
                     scanPaused = false;
                     scan();
                 }

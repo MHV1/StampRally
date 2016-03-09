@@ -32,11 +32,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-/*
-*
-* Each Fingerprint represents a Stamp!
-*
-*/
 public class CalibrationActivity extends Activity {
 
     private static final String TAG = "CalibrationActivity";
@@ -48,10 +43,10 @@ public class CalibrationActivity extends Activity {
     private List<ScanResult> wifiScanResults;
     private static final int SCAN_INTERVAL = 1000;
 	
-	public ArrayList<Fingerprint> availableFingerprints = new ArrayList<>();
-    public ArrayList<Fingerprint> calibratedFingerprints = new ArrayList<>();
-	private HashMap<String, Integer> fingerprintData = new HashMap<>();
-	public Fingerprint selectedFingerprint;
+	public ArrayList<Stamp> availableStamps = new ArrayList<>();
+    public ArrayList<Stamp> calibratedStamps = new ArrayList<>();
+	private HashMap<String, Integer> stampData = new HashMap<>();
+	public Stamp selectedStamp;
 
     private GridView calibrationGrid;
     private GridAdapter gridAdapter;
@@ -70,18 +65,18 @@ public class CalibrationActivity extends Activity {
         }
         wifiScanReceiver = new WifiScanReceiver();
 		
-		//If no previously calibrated fingerprints are found, set all values to default
-        //TODO: User should be able to calibrate/recalibrate fingerprints anytime
-		if (availableFingerprints.isEmpty()) {
-			availableFingerprints = new ArrayList<>();
-			Fingerprint fingerprint = new Fingerprint(R.drawable.picture_icon, 1, fingerprintData, false);
-			availableFingerprints.add(fingerprint);
-			fingerprint = new Fingerprint(R.drawable.picture_icon, 2, fingerprintData, false);
-			availableFingerprints.add(fingerprint);
-			fingerprint = new Fingerprint(R.drawable.picture_icon, 3, fingerprintData, false);
-			availableFingerprints.add(fingerprint);
-			fingerprint = new Fingerprint(R.drawable.picture_icon, 4, fingerprintData, false);
-			availableFingerprints.add(fingerprint);
+		//If no previously calibrated stamps are found, set all values to default
+        //TODO: User should be able to calibrate/recalibrate stamps anytime
+		if (availableStamps.isEmpty()) {
+			availableStamps = new ArrayList<>();
+			Stamp stamp = new Stamp(R.drawable.picture_icon, 1, stampData, false);
+			availableStamps.add(stamp);
+			stamp = new Stamp(R.drawable.picture_icon, 2, stampData, false);
+			availableStamps.add(stamp);
+			stamp = new Stamp(R.drawable.picture_icon, 3, stampData, false);
+			availableStamps.add(stamp);
+			stamp = new Stamp(R.drawable.picture_icon, 4, stampData, false);
+			availableStamps.add(stamp);
 		}
 
         calibrationGrid = (GridView) findViewById(R.id.calibrationGrid);
@@ -92,8 +87,8 @@ public class CalibrationActivity extends Activity {
         calibrationGrid.setOnItemClickListener(new OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                selectedFingerprint = (Fingerprint) gridAdapter.getItem(position);
-                Toast.makeText(CalibrationActivity.this, "Selected fingerprint: " + selectedFingerprint.getFingerprintId(), Toast.LENGTH_SHORT).show();
+                selectedStamp = (Stamp) gridAdapter.getItem(position);
+                Toast.makeText(CalibrationActivity.this, "Selected stamp: " + selectedStamp.getStampId(), Toast.LENGTH_SHORT).show();
                 calibrate();
             }
         });
@@ -104,9 +99,9 @@ public class CalibrationActivity extends Activity {
             @Override
             public void onClick(View v) {
                 intent = new Intent(CalibrationActivity.this, MainActivity.class);
-                Bundle savedFingerprintsBundle = new Bundle();
-                savedFingerprintsBundle.putParcelableArrayList("calibrated_fingerprints", calibratedFingerprints);
-                intent.putExtras(savedFingerprintsBundle);
+                Bundle savedStampsBundle = new Bundle();
+                savedStampsBundle.putParcelableArrayList("calibrated_stamps", calibratedStamps);
+                intent.putExtras(savedStampsBundle);
                 setResult(RESULT_OK, intent);
                 finish();
             }
@@ -123,7 +118,7 @@ public class CalibrationActivity extends Activity {
         });
 
         calibratedText = (TextView) findViewById(R.id.calibratedText);
-        calibratedText.setText("Calibrated fingerprints: " + calibratedFingerprints.size());
+        calibratedText.setText("Calibrated stamps: " + calibratedStamps.size());
 		
 		//Administrator password necessary for calibration
 		LayoutInflater layoutInflater = LayoutInflater.from(this);
@@ -190,7 +185,7 @@ public class CalibrationActivity extends Activity {
     }
 
 	public void calibrate() {
-        fingerprintData = new HashMap<>();
+        stampData = new HashMap<>();
         //TODO: Multiple scans could be preformed to decrease inaccuracies caused by RSSI fluctuation?
         wifiManager.startScan();
 	}
@@ -201,14 +196,14 @@ public class CalibrationActivity extends Activity {
             wifiScanResults = wifiManager.getScanResults();
 
             for (ScanResult sr : wifiScanResults) {
-                fingerprintData.put(sr.BSSID, sr.level);
+                stampData.put(sr.BSSID, sr.level);
             }
 
-            selectedFingerprint.setFingerprintData(fingerprintData);
-            selectedFingerprint.setCalibrated(true);
-            calibratedFingerprints.add(selectedFingerprint);
-            calibratedText.setText("Calibrated fingerprints: " + calibratedFingerprints.size());
-            Log.d(TAG,"Fingerprint: " + selectedFingerprint.getFingerprintData());
+            selectedStamp.setStampData(stampData);
+            selectedStamp.setCalibrated(true);
+            calibratedStamps.add(selectedStamp);
+            calibratedText.setText("Calibrated stamps: " + calibratedStamps.size());
+            Log.d(TAG,"Stamp: " + selectedStamp.getStampData());
         }
     }
 
@@ -220,11 +215,11 @@ public class CalibrationActivity extends Activity {
         }
 
         public int getCount() {
-            return availableFingerprints.size();
+            return availableStamps.size();
         }
 
         public Object getItem(int position) {
-            return availableFingerprints.get(position);
+            return availableStamps.get(position);
         }
 
         public long getItemId(int position) {
@@ -244,7 +239,7 @@ public class CalibrationActivity extends Activity {
                 imageView = (ImageView) view;
             }
 
-            imageView.setImageResource(availableFingerprints.get(position).getStampId());
+            imageView.setImageResource(availableStamps.get(position).getImageId());
             return imageView;
         }
     }
