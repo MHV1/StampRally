@@ -46,7 +46,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView status;
     private TextView inRangeText;
     private ImageButton settingsButton;
-    private ImageButton cameraButton;
+    private ImageButton stampButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,12 +78,12 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        cameraButton = (ImageButton) findViewById(R.id.cameraButton);
-        cameraButton.setOnClickListener(new View.OnClickListener() {
+        stampButton = (ImageButton) findViewById(R.id.stampButton);
+        stampButton.setOnClickListener(new View.OnClickListener() {
 
             @Override
             public void onClick(View v) {
-                //TODO: Camera is supposed to be used to collect the stamps. Act accordingly.
+                //TODO: Supposed to be used to collect the stamps. Act accordingly.
             }
         });
     }
@@ -181,8 +181,6 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
-
-
 
     //Euclidean distances are calculated in order to find the closest stamp to the runtime one (shortest distance)
     private double calculateEuclideanDistance(Stamp calibratedStamp, Stamp runtimeStamp) {
