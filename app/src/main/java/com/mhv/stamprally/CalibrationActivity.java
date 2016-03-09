@@ -2,6 +2,7 @@ package com.mhv.stamprally;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -54,6 +55,7 @@ public class CalibrationActivity extends Activity {
 	private Intent intent;
     private TextView calibratedText;
 
+
     @Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -89,7 +91,19 @@ public class CalibrationActivity extends Activity {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 selectedStamp = (Stamp) gridAdapter.getItem(position);
                 Toast.makeText(CalibrationActivity.this, "Selected stamp: " + selectedStamp.getStampId(), Toast.LENGTH_SHORT).show();
-                calibrate();
+                final ProgressDialog calibrationDialog = ProgressDialog.show(CalibrationActivity.this, "Please wait", "Calibrating Stamp...", true);
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            calibrate();
+                            Thread.sleep(4000);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                        calibrationDialog.dismiss();
+                    }
+                }).start();
             }
         });
 

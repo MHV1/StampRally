@@ -1,6 +1,7 @@
 package com.mhv.stamprally;
 
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -35,7 +36,7 @@ public class MainActivity extends AppCompatActivity {
     private static final Handler handler = new Handler(Looper.getMainLooper());
 
     private static final int STAMP_EDIT = 1;
-    private static final int STAMP_FOUND = 2;
+    //private static final int STAMP_FOUND = 2;
 
     protected WifiManager wifiManager;
     private WifiScanReceiver wifiScanReceiver;
@@ -122,7 +123,19 @@ public class MainActivity extends AppCompatActivity {
                 }).setPositiveButton("Enable", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
-                wifiManager.setWifiEnabled(true);
+                final ProgressDialog calibrationDialog = ProgressDialog.show(MainActivity.this, "Please wait", "Enabling WI-Fi", true);
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            wifiManager.setWifiEnabled(true);
+                            Thread.sleep(4000);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                        calibrationDialog.dismiss();
+                    }
+                }).start();
             }
         }).show();
     }
@@ -173,26 +186,28 @@ public class MainActivity extends AppCompatActivity {
             }
             Stamp runtimeStamp = new Stamp(R.drawable.picture_icon, 0, tempData, true);
             //Log.d(TAG, "Runtime Stamp: " + runtimeStamp.getStampData());
-            //TODO: Logic to compare and find closest Stamp
             HashMap<Stamp, Double> stampDistances = new HashMap<>();
             for (Stamp calibratedStamp : stamps) {
                 double distanceResult = calculateEuclideanDistance(calibratedStamp, runtimeStamp);
                 stampDistances.put(calibratedStamp, distanceResult);
+                findStampInRange(stampDistances);
             }
+        }
+    }
 
-            Map.Entry<Stamp, Double> minEntry = null;
+    public void findStampInRange(HashMap<Stamp, Double> stampDistances) {
+        Map.Entry<Stamp, Double> minEntry = null;
 
-            for(Map.Entry<Stamp, Double> entry : stampDistances.entrySet()) {
-                if (minEntry == null || entry.getValue() < minEntry.getValue()) {
-                    minEntry = entry;
-                }
+        for(Map.Entry<Stamp, Double> entry : stampDistances.entrySet()) {
+            if (minEntry == null || entry.getValue() < minEntry.getValue()) {
+                minEntry = entry;
             }
+        }
 
-            if(minEntry != null) {
-                Log.d(TAG, "" + minEntry.getValue());
-                stampInRange = minEntry.getKey();
-                inRangeText.setText("" + minEntry.getKey().getStampId());
-            }
+        if(minEntry != null) {
+            Log.d(TAG, "" + minEntry.getValue());
+            stampInRange = minEntry.getKey();
+            inRangeText.setText("" + minEntry.getKey().getStampId());
         }
     }
 
