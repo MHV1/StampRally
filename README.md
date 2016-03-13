@@ -1,4 +1,8 @@
 # StampRally
+
+Copyright 2016 Milan Herrera <mherrv1@gmail.com>
+Licensed under the Apache License, Version 2.0
+
 スタンプラリー 
 
 Project created as part of Android training at National College of Technology, Sendai Campus. Japan (2015)
